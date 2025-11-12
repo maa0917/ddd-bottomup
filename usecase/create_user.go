@@ -12,6 +12,7 @@ type CreateUserInput struct {
 	FirstName string
 	LastName  string
 	Email     string
+	IsPremium bool
 }
 
 type CreateUserOutput struct {
@@ -44,7 +45,7 @@ func (uc *CreateUserUseCase) Execute(input CreateUserInput) (*CreateUserOutput, 
 		return nil, err
 	}
 
-	user := entity.NewUser(fullName, email)
+	user := entity.NewUser(fullName, email, input.IsPremium)
 
 	exists, err := uc.userExistenceService.Exists(user)
 	if err != nil {
