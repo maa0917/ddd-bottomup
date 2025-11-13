@@ -3,6 +3,8 @@ package presentation
 import (
 	"ddd-bottomup/usecase"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func NewRouter(
@@ -10,8 +12,8 @@ func NewRouter(
 	getUserUseCase *usecase.GetUserUseCase,
 	updateUserUseCase *usecase.UpdateUserUseCase,
 	deleteUserUseCase *usecase.DeleteUserUseCase,
-) *http.ServeMux {
-	mux := http.NewServeMux()
+) *chi.Mux {
+	r := chi.NewRouter()
 
 	userHandler := NewUserHandler(
 		createUserUseCase,
@@ -20,18 +22,22 @@ func NewRouter(
 		deleteUserUseCase,
 	)
 
-	mux.Handle("/users", userHandler)
-	mux.Handle("/users/", userHandler)
-
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
+	// Health check endpoint
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status": "ok"}`))
 	})
 
-	return mux
+	// User routes
+	r.Route("/users", func(r chi.Router) {
+		r.Post("/", userHandler.CreateUser)
+		r.Route("/{userID}", func(r chi.Router) {
+			r.Get("/", userHandler.GetUser)
+			r.Put("/", userHandler.UpdateUser)
+			r.Delete("/", userHandler.DeleteUser)
+		})
+	})
+
+	return r
 }

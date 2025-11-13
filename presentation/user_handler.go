@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type UserHandler struct {
@@ -62,45 +64,8 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	path := strings.TrimPrefix(r.URL.Path, "/users")
-
-	switch r.Method {
-	case http.MethodPost:
-		if path == "" || path == "/" {
-			h.CreateUser(w, r)
-		} else {
-			h.writeError(w, "Not Found", http.StatusNotFound)
-		}
-	case http.MethodGet:
-		if path == "" || path == "/" {
-			h.writeError(w, "User ID required", http.StatusBadRequest)
-		} else {
-			userID := strings.TrimPrefix(path, "/")
-			h.GetUser(w, r, userID)
-		}
-	case http.MethodPut:
-		if path == "" || path == "/" {
-			h.writeError(w, "User ID required", http.StatusBadRequest)
-		} else {
-			userID := strings.TrimPrefix(path, "/")
-			h.UpdateUser(w, r, userID)
-		}
-	case http.MethodDelete:
-		if path == "" || path == "/" {
-			h.writeError(w, "User ID required", http.StatusBadRequest)
-		} else {
-			userID := strings.TrimPrefix(path, "/")
-			h.DeleteUser(w, r, userID)
-		}
-	default:
-		h.writeError(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-	}
-}
-
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	var req CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.writeError(w, "Invalid request body", http.StatusBadRequest)
@@ -133,7 +98,9 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request, userID string) {
+func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	userID := chi.URLParam(r, "userID")
 	input := usecase.GetUserInput{
 		UserID: userID,
 	}
@@ -161,7 +128,9 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request, userID str
 	json.NewEncoder(w).Encode(response)
 }
 
-func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request, userID string) {
+func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	userID := chi.URLParam(r, "userID")
 	var req UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.writeError(w, "Invalid request body", http.StatusBadRequest)
@@ -200,7 +169,9 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request, userID 
 	json.NewEncoder(w).Encode(response)
 }
 
-func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request, userID string) {
+func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	userID := chi.URLParam(r, "userID")
 	input := usecase.DeleteUserInput{
 		UserID: userID,
 	}
