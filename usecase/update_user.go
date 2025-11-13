@@ -1,18 +1,15 @@
 package usecase
 
 import (
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/service"
-	"ddd-bottomup/domain/valueobject"
+	"ddd-bottomup/domain"
 	"errors"
 )
 
 type UpdateUserInput struct {
 	UserID    string
-	FirstName *string  // オプショナル
-	LastName  *string  // オプショナル  
-	Email     *string  // オプショナル
+	FirstName *string // オプショナル
+	LastName  *string // オプショナル
+	Email     *string // オプショナル
 }
 
 type UpdateUserOutput struct {
@@ -22,7 +19,7 @@ type UpdateUserOutput struct {
 	Email     string
 }
 
-func NewUpdateUserOutput(user *entity.User) *UpdateUserOutput {
+func NewUpdateUserOutput(user *domain.User) *UpdateUserOutput {
 	return &UpdateUserOutput{
 		UserID:    user.ID().Value(),
 		FirstName: user.Name().FirstName(),
@@ -32,11 +29,11 @@ func NewUpdateUserOutput(user *entity.User) *UpdateUserOutput {
 }
 
 type UpdateUserUseCase struct {
-	userRepository       repository.UserRepository
-	userExistenceService *service.UserExistenceService
+	userRepository       domain.UserRepository
+	userExistenceService *domain.UserExistenceService
 }
 
-func NewUpdateUserUseCase(userRepository repository.UserRepository, userExistenceService *service.UserExistenceService) *UpdateUserUseCase {
+func NewUpdateUserUseCase(userRepository domain.UserRepository, userExistenceService *domain.UserExistenceService) *UpdateUserUseCase {
 	return &UpdateUserUseCase{
 		userRepository:       userRepository,
 		userExistenceService: userExistenceService,
@@ -44,7 +41,7 @@ func NewUpdateUserUseCase(userRepository repository.UserRepository, userExistenc
 }
 
 func (uc *UpdateUserUseCase) Execute(input UpdateUserInput) (*UpdateUserOutput, error) {
-	userID, err := entity.ReconstructUserID(input.UserID)
+	userID, err := domain.ReconstructUserID(input.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -59,13 +56,13 @@ func (uc *UpdateUserUseCase) Execute(input UpdateUserInput) (*UpdateUserOutput, 
 
 	// 名前更新（指定されている場合）
 	if input.FirstName != nil && input.LastName != nil {
-		newName, err := valueobject.NewFullName(*input.FirstName, *input.LastName)
+		newName, err := domain.NewFullName(*input.FirstName, *input.LastName)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		user.ChangeName(newName)
-		
+
 		// 名前変更後に重複チェック
 		exists, err := uc.userExistenceService.Exists(user)
 		if err != nil {
@@ -78,11 +75,11 @@ func (uc *UpdateUserUseCase) Execute(input UpdateUserInput) (*UpdateUserOutput, 
 
 	// メール更新（指定されている場合）
 	if input.Email != nil {
-		newEmail, err := valueobject.NewEmail(*input.Email)
+		newEmail, err := domain.NewEmail(*input.Email)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		user.ChangeEmail(newEmail)
 	}
 

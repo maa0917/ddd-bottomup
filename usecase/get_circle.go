@@ -1,9 +1,7 @@
 package usecase
 
 import (
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/service"
+	"ddd-bottomup/domain"
 	"errors"
 )
 
@@ -21,11 +19,11 @@ type GetCircleOutput struct {
 }
 
 type GetCircleUseCase struct {
-	circleRepository repository.CircleRepository
-	userRepository   repository.UserRepository
+	circleRepository domain.CircleRepository
+	userRepository   domain.UserRepository
 }
 
-func NewGetCircleUseCase(circleRepository repository.CircleRepository, userRepository repository.UserRepository) *GetCircleUseCase {
+func NewGetCircleUseCase(circleRepository domain.CircleRepository, userRepository domain.UserRepository) *GetCircleUseCase {
 	return &GetCircleUseCase{
 		circleRepository: circleRepository,
 		userRepository:   userRepository,
@@ -34,7 +32,7 @@ func NewGetCircleUseCase(circleRepository repository.CircleRepository, userRepos
 
 func (uc *GetCircleUseCase) Execute(input GetCircleInput) (*GetCircleOutput, error) {
 	// CircleIDを再構成
-	circleID, err := entity.ReconstructCircleID(input.CircleID)
+	circleID, err := domain.ReconstructCircleID(input.CircleID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +56,7 @@ func (uc *GetCircleUseCase) Execute(input GetCircleInput) (*GetCircleOutput, err
 	}
 
 	// メンバーリストを構築
-	var members []*entity.User
+	var members []*domain.User
 	for _, memberID := range circle.GetMemberIDs() {
 		member, err := uc.userRepository.FindByID(memberID)
 		if err != nil {
@@ -70,8 +68,8 @@ func (uc *GetCircleUseCase) Execute(input GetCircleInput) (*GetCircleOutput, err
 	}
 
 	// プレミアム制限を考慮した利用可能枠を計算
-	circleMembers := entity.NewCircleMembers(owner, members)
-	memberService := service.NewCircleMemberService()
+	circleMembers := domain.NewCircleMembers(owner, members)
+	memberService := domain.NewCircleMemberService()
 
 	// アウトプットに変換
 	return &GetCircleOutput{
@@ -84,7 +82,7 @@ func (uc *GetCircleUseCase) Execute(input GetCircleInput) (*GetCircleOutput, err
 	}, nil
 }
 
-func convertUserIDsToStrings(userIDs []*entity.UserID) []string {
+func convertUserIDsToStrings(userIDs []*domain.UserID) []string {
 	result := make([]string, len(userIDs))
 	for i, userID := range userIDs {
 		result[i] = userID.Value()

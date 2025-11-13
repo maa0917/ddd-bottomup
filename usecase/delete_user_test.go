@@ -1,9 +1,7 @@
 package usecase
 
 import (
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/service"
-	"ddd-bottomup/domain/valueobject"
+	"ddd-bottomup/domain"
 	"ddd-bottomup/infrastructure"
 	"testing"
 )
@@ -13,9 +11,9 @@ func TestDeleteUserUseCase_Execute_Success(t *testing.T) {
 	repo := infrastructure.NewMemoryUserRepository()
 
 	// テスト用のユーザーを作成・保存
-	fullName, _ := valueobject.NewFullName("太郎", "田中")
-	email, _ := valueobject.NewEmail("taro@example.com")
-	user := entity.NewUser(fullName, email)
+	fullName, _ := domain.NewFullName("太郎", "田中")
+	email, _ := domain.NewEmail("taro@example.com")
+	user := domain.NewUser(fullName, email, false)
 	err := repo.Save(user)
 	if err != nil {
 		t.Fatalf("Failed to save test user: %v", err)
@@ -42,7 +40,7 @@ func TestDeleteUserUseCase_Execute_Success(t *testing.T) {
 	}
 
 	// リポジトリから削除されていることを確認
-	memoryRepo := repo.(*repository.UserRepositoryMemory)
+	memoryRepo := repo.(*infrastructure.MemoryUserRepository)
 	if memoryRepo.Count() != 0 {
 		t.Errorf("Expected 0 users in repository, but got %d", memoryRepo.Count())
 	}
@@ -54,7 +52,7 @@ func TestDeleteUserUseCase_Execute_UserNotFound(t *testing.T) {
 	useCase := NewDeleteUserUseCase(repo)
 
 	// 存在しないUserIDを使用
-	nonExistentID := entity.NewUserID()
+	nonExistentID := domain.NewUserID()
 	input := DeleteUserInput{UserID: nonExistentID.Value()}
 
 	// Act
@@ -102,7 +100,7 @@ func TestDeleteUserUseCase_Execute_InvalidUserID(t *testing.T) {
 func TestDeleteUserUseCase_Execute_MultipleUsersOneDeleted(t *testing.T) {
 	// Arrange
 	repo := infrastructure.NewMemoryUserRepository()
-	userExistenceService := service.NewUserExistenceService(repo)
+	userExistenceService := domain.NewUserExistenceService(repo)
 	createUseCase := NewCreateUserUseCase(repo, userExistenceService)
 	deleteUseCase := NewDeleteUserUseCase(repo)
 
@@ -130,20 +128,20 @@ func TestDeleteUserUseCase_Execute_MultipleUsersOneDeleted(t *testing.T) {
 	}
 
 	// Assert
-	memoryRepo := repo.(*repository.UserRepositoryMemory)
+	memoryRepo := repo.(*infrastructure.MemoryUserRepository)
 	if memoryRepo.Count() != 2 {
 		t.Errorf("Expected 2 users remaining, but got %d", memoryRepo.Count())
 	}
 
 	// 削除されたユーザーが見つからないことを確認
-	deletedUser, err := repo.FindByID(entity.NewUserID())
+	deletedUser, err := repo.FindByID(domain.NewUserID())
 	if err == nil && deletedUser != nil {
 		t.Error("Deleted user should not be found")
 	}
 
 	// 残りのユーザーは存在することを確認
 	for i := 1; i < len(createdUserIDs); i++ {
-		userID, _ := entity.ReconstructUserID(createdUserIDs[i])
+		userID, _ := domain.ReconstructUserID(createdUserIDs[i])
 		user, err := repo.FindByID(userID)
 		if err != nil {
 			t.Errorf("Failed to find remaining user %d: %v", i, err)
@@ -158,9 +156,9 @@ func TestDeleteUserUseCase_Execute_DeleteSameUserTwice(t *testing.T) {
 	// Arrange
 	repo := infrastructure.NewMemoryUserRepository()
 
-	fullName, _ := valueobject.NewFullName("太郎", "田中")
-	email, _ := valueobject.NewEmail("taro@example.com")
-	user := entity.NewUser(fullName, email)
+	fullName, _ := domain.NewFullName("太郎", "田中")
+	email, _ := domain.NewEmail("taro@example.com")
+	user := domain.NewUser(fullName, email, false)
 	repo.Save(user)
 
 	useCase := NewDeleteUserUseCase(repo)

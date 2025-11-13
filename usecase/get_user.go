@@ -1,8 +1,7 @@
 package usecase
 
 import (
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/repository"
+	"ddd-bottomup/domain"
 	"errors"
 )
 
@@ -17,7 +16,7 @@ type GetUserOutput struct {
 	Email     string
 }
 
-func NewGetUserOutput(user *entity.User) *GetUserOutput {
+func NewGetUserOutput(user *domain.User) *GetUserOutput {
 	return &GetUserOutput{
 		UserID:    user.ID().Value(),
 		FirstName: user.Name().FirstName(),
@@ -27,17 +26,17 @@ func NewGetUserOutput(user *entity.User) *GetUserOutput {
 }
 
 type GetUserUseCase struct {
-	userRepository repository.UserRepository
+	userRepository domain.UserRepository
 }
 
-func NewGetUserUseCase(userRepository repository.UserRepository) *GetUserUseCase {
+func NewGetUserUseCase(userRepository domain.UserRepository) *GetUserUseCase {
 	return &GetUserUseCase{
 		userRepository: userRepository,
 	}
 }
 
 func (uc *GetUserUseCase) Execute(input GetUserInput) (*GetUserOutput, error) {
-	userID, err := entity.ReconstructUserID(input.UserID)
+	userID, err := domain.ReconstructUserID(input.UserID)
 	if err != nil {
 		return nil, err
 	}

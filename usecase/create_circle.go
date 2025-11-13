@@ -1,10 +1,7 @@
 package usecase
 
 import (
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/service"
-	"ddd-bottomup/domain/valueobject"
+	"ddd-bottomup/domain"
 	"errors"
 )
 
@@ -18,15 +15,15 @@ type CreateCircleOutput struct {
 }
 
 type CreateCircleUseCase struct {
-	circleRepository       repository.CircleRepository
-	userRepository         repository.UserRepository
-	circleExistenceService *service.CircleExistenceService
+	circleRepository       domain.CircleRepository
+	userRepository         domain.UserRepository
+	circleExistenceService *domain.CircleExistenceService
 }
 
 func NewCreateCircleUseCase(
-	circleRepository repository.CircleRepository,
-	userRepository repository.UserRepository,
-	circleExistenceService *service.CircleExistenceService,
+	circleRepository domain.CircleRepository,
+	userRepository domain.UserRepository,
+	circleExistenceService *domain.CircleExistenceService,
 ) *CreateCircleUseCase {
 	return &CreateCircleUseCase{
 		circleRepository:       circleRepository,
@@ -37,13 +34,13 @@ func NewCreateCircleUseCase(
 
 func (uc *CreateCircleUseCase) Execute(input CreateCircleInput) (*CreateCircleOutput, error) {
 	// サークル名の値オブジェクト作成
-	circleName, err := valueobject.NewCircleName(input.CircleName)
+	circleName, err := domain.NewCircleName(input.CircleName)
 	if err != nil {
 		return nil, err
 	}
 
 	// オーナーIDからUserIDを再構成
-	ownerID, err := entity.ReconstructUserID(input.OwnerID)
+	ownerID, err := domain.ReconstructUserID(input.OwnerID)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +64,7 @@ func (uc *CreateCircleUseCase) Execute(input CreateCircleInput) (*CreateCircleOu
 	}
 
 	// サークル作成
-	circle := entity.NewCircle(circleName, ownerID)
+	circle := domain.NewCircle(circleName, ownerID)
 
 	// サークル保存
 	err = uc.circleRepository.Save(circle)
@@ -79,4 +76,3 @@ func (uc *CreateCircleUseCase) Execute(input CreateCircleInput) (*CreateCircleOu
 		CircleID: circle.ID().Value(),
 	}, nil
 }
-

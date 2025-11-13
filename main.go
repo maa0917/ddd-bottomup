@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ddd-bottomup/domain/service"
+	"ddd-bottomup/domain"
 	"ddd-bottomup/infrastructure"
 	"ddd-bottomup/presentation/router"
 	"ddd-bottomup/usecase"
@@ -58,7 +58,7 @@ func setupApplication() (*Application, error) {
 
 	// 2. ドメインサービス層の初期化
 	log.Println("Initializing domain services...")
-	userExistenceService := service.NewUserExistenceService(userRepo)
+	userExistenceService := domain.NewUserExistenceService(userRepo)
 
 	// 3. ユースケース層の初期化
 	log.Println("Initializing use cases...")
@@ -102,7 +102,7 @@ func testApplication(app *Application) error {
 		return err
 	}
 
-	log.Printf("✓ User retrieved: %s %s (%s)", 
+	log.Printf("✓ User retrieved: %s %s (%s)",
 		getOutput.FirstName, getOutput.LastName, getOutput.Email)
 
 	// テスト3: ユーザー更新
@@ -120,7 +120,7 @@ func testApplication(app *Application) error {
 		return err
 	}
 
-	log.Printf("✓ User updated: %s %s (%s)", 
+	log.Printf("✓ User updated: %s %s (%s)",
 		updateOutput.FirstName, updateOutput.LastName, updateOutput.Email)
 
 	// テスト4: 重複チェック

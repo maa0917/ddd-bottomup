@@ -1,8 +1,7 @@
 package usecase
 
 import (
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/repository"
+	"ddd-bottomup/domain"
 	"errors"
 )
 
@@ -11,17 +10,17 @@ type DeleteUserInput struct {
 }
 
 type DeleteUserUseCase struct {
-	userRepository repository.UserRepository
+	userRepository domain.UserRepository
 }
 
-func NewDeleteUserUseCase(userRepository repository.UserRepository) *DeleteUserUseCase {
+func NewDeleteUserUseCase(userRepository domain.UserRepository) *DeleteUserUseCase {
 	return &DeleteUserUseCase{
 		userRepository: userRepository,
 	}
 }
 
 func (uc *DeleteUserUseCase) Execute(input DeleteUserInput) error {
-	userID, err := entity.ReconstructUserID(input.UserID)
+	userID, err := domain.ReconstructUserID(input.UserID)
 	if err != nil {
 		return err
 	}

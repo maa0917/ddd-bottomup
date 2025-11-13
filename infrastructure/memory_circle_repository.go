@@ -1,27 +1,25 @@
 package infrastructure
 
 import (
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/valueobject"
+	"ddd-bottomup/domain"
 	"sync"
 )
 
 type MemoryCircleRepository struct {
-	circles map[string]*entity.Circle
+	circles map[string]*domain.Circle
 	mu      sync.RWMutex
 }
 
-func NewMemoryCircleRepository() repository.CircleRepository {
+func NewMemoryCircleRepository() domain.CircleRepository {
 	return &MemoryCircleRepository{
-		circles: make(map[string]*entity.Circle),
+		circles: make(map[string]*domain.Circle),
 	}
 }
 
-func (r *MemoryCircleRepository) FindByID(id *entity.CircleID) (*entity.Circle, error) {
+func (r *MemoryCircleRepository) FindByID(id *domain.CircleID) (*domain.Circle, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	circle, exists := r.circles[id.Value()]
 	if !exists {
 		return nil, nil
@@ -29,10 +27,10 @@ func (r *MemoryCircleRepository) FindByID(id *entity.CircleID) (*entity.Circle, 
 	return circle, nil
 }
 
-func (r *MemoryCircleRepository) FindByName(name *valueobject.CircleName) (*entity.Circle, error) {
+func (r *MemoryCircleRepository) FindByName(name *domain.CircleName) (*domain.Circle, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	for _, circle := range r.circles {
 		if circle.Name().Equals(name) {
 			return circle, nil
@@ -41,27 +39,27 @@ func (r *MemoryCircleRepository) FindByName(name *valueobject.CircleName) (*enti
 	return nil, nil
 }
 
-func (r *MemoryCircleRepository) Save(circle *entity.Circle) error {
+func (r *MemoryCircleRepository) Save(circle *domain.Circle) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	r.circles[circle.ID().Value()] = circle
 	return nil
 }
 
-func (r *MemoryCircleRepository) Delete(id *entity.CircleID) error {
+func (r *MemoryCircleRepository) Delete(id *domain.CircleID) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	delete(r.circles, id.Value())
 	return nil
 }
 
-func (r *MemoryCircleRepository) FindAll() ([]*entity.Circle, error) {
+func (r *MemoryCircleRepository) FindAll() ([]*domain.Circle, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
-	circles := make([]*entity.Circle, 0, len(r.circles))
+
+	circles := make([]*domain.Circle, 0, len(r.circles))
 	for _, circle := range r.circles {
 		circles = append(circles, circle)
 	}

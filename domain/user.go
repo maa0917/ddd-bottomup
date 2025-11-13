@@ -1,7 +1,6 @@
-package entity
+package domain
 
 import (
-	"ddd-bottomup/domain/valueobject"
 	"errors"
 	"github.com/google/uuid"
 )
@@ -41,12 +40,12 @@ func (u *UserID) String() string {
 
 type User struct {
 	id        *UserID
-	name      *valueobject.FullName
-	email     *valueobject.Email
+	name      *FullName
+	email     *Email
 	isPremium bool
 }
 
-func NewUser(name *valueobject.FullName, email *valueobject.Email, isPremium bool) *User {
+func NewUser(name *FullName, email *Email, isPremium bool) *User {
 	return &User{
 		id:        NewUserID(),
 		name:      name,
@@ -55,7 +54,7 @@ func NewUser(name *valueobject.FullName, email *valueobject.Email, isPremium boo
 	}
 }
 
-func ReconstructUser(id *UserID, name *valueobject.FullName, email *valueobject.Email, isPremium bool) *User {
+func ReconstructUser(id *UserID, name *FullName, email *Email, isPremium bool) *User {
 	return &User{
 		id:        id,
 		name:      name,
@@ -68,19 +67,19 @@ func (u *User) ID() *UserID {
 	return u.id
 }
 
-func (u *User) Name() *valueobject.FullName {
+func (u *User) Name() *FullName {
 	return u.name
 }
 
-func (u *User) Email() *valueobject.Email {
+func (u *User) Email() *Email {
 	return u.email
 }
 
-func (u *User) ChangeName(name *valueobject.FullName) {
+func (u *User) ChangeName(name *FullName) {
 	u.name = name
 }
 
-func (u *User) ChangeEmail(email *valueobject.Email) {
+func (u *User) ChangeEmail(email *Email) {
 	u.email = email
 }
 
@@ -93,4 +92,23 @@ func (u *User) Equals(other *User) bool {
 		return false
 	}
 	return u.id.Equals(other.id)
+}
+
+// UserExistenceService - ユーザー存在確認サービス
+type UserExistenceService struct {
+	userRepository UserRepository
+}
+
+func NewUserExistenceService(userRepository UserRepository) *UserExistenceService {
+	return &UserExistenceService{
+		userRepository: userRepository,
+	}
+}
+
+func (s *UserExistenceService) Exists(user *User) (bool, error) {
+	existingUser, err := s.userRepository.FindByName(user.Name())
+	if err != nil {
+		return false, err
+	}
+	return existingUser != nil, nil
 }

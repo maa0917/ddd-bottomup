@@ -1,10 +1,7 @@
 package usecase
 
 import (
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/service"
-	"ddd-bottomup/domain/valueobject"
+	"ddd-bottomup/domain"
 	"errors"
 )
 
@@ -20,13 +17,13 @@ type CreateUserOutput struct {
 }
 
 type CreateUserUseCase struct {
-	userRepository       repository.UserRepository
-	userExistenceService *service.UserExistenceService
+	userRepository       domain.UserRepository
+	userExistenceService *domain.UserExistenceService
 }
 
 func NewCreateUserUseCase(
-	userRepository repository.UserRepository,
-	userExistenceService *service.UserExistenceService,
+	userRepository domain.UserRepository,
+	userExistenceService *domain.UserExistenceService,
 ) *CreateUserUseCase {
 	return &CreateUserUseCase{
 		userRepository:       userRepository,
@@ -35,17 +32,17 @@ func NewCreateUserUseCase(
 }
 
 func (uc *CreateUserUseCase) Execute(input CreateUserInput) (*CreateUserOutput, error) {
-	fullName, err := valueobject.NewFullName(input.FirstName, input.LastName)
+	fullName, err := domain.NewFullName(input.FirstName, input.LastName)
 	if err != nil {
 		return nil, err
 	}
 
-	email, err := valueobject.NewEmail(input.Email)
+	email, err := domain.NewEmail(input.Email)
 	if err != nil {
 		return nil, err
 	}
 
-	user := entity.NewUser(fullName, email, input.IsPremium)
+	user := domain.NewUser(fullName, email, input.IsPremium)
 
 	exists, err := uc.userExistenceService.Exists(user)
 	if err != nil {

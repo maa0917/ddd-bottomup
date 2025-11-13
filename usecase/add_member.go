@@ -1,9 +1,7 @@
 package usecase
 
 import (
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/service"
+	"ddd-bottomup/domain"
 	"errors"
 	"fmt"
 )
@@ -14,13 +12,13 @@ type AddMemberInput struct {
 }
 
 type AddMemberUseCase struct {
-	circleRepository repository.CircleRepository
-	userRepository   repository.UserRepository
+	circleRepository domain.CircleRepository
+	userRepository   domain.UserRepository
 }
 
 func NewAddMemberUseCase(
-	circleRepository repository.CircleRepository,
-	userRepository repository.UserRepository,
+	circleRepository domain.CircleRepository,
+	userRepository domain.UserRepository,
 ) *AddMemberUseCase {
 	return &AddMemberUseCase{
 		circleRepository: circleRepository,
@@ -30,13 +28,13 @@ func NewAddMemberUseCase(
 
 func (uc *AddMemberUseCase) Execute(input AddMemberInput) error {
 	// CircleIDを再構成
-	circleID, err := entity.ReconstructCircleID(input.CircleID)
+	circleID, err := domain.ReconstructCircleID(input.CircleID)
 	if err != nil {
 		return err
 	}
 
 	// UserIDを再構成
-	userID, err := entity.ReconstructUserID(input.UserID)
+	userID, err := domain.ReconstructUserID(input.UserID)
 	if err != nil {
 		return err
 	}
@@ -77,7 +75,7 @@ func (uc *AddMemberUseCase) Execute(input AddMemberInput) error {
 	}
 
 	// メンバーリストを構築
-	var members []*entity.User
+	var members []*domain.User
 	for _, memberID := range circle.GetMemberIDs() {
 		member, err := uc.userRepository.FindByID(memberID)
 		if err != nil {
@@ -89,8 +87,8 @@ func (uc *AddMemberUseCase) Execute(input AddMemberInput) error {
 	}
 
 	// プレミアム制限をチェック
-	circleMembers := entity.NewCircleMembers(owner, members)
-	memberService := service.NewCircleMemberService()
+	circleMembers := domain.NewCircleMembers(owner, members)
+	memberService := domain.NewCircleMemberService()
 	if !memberService.CanAddMember(circleMembers) {
 		maxLimit := memberService.GetMaxLimit(circleMembers)
 		return fmt.Errorf("circle is full: maximum %d participants (including owner) allowed", maxLimit)

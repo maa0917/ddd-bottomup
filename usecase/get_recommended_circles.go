@@ -1,9 +1,7 @@
 package usecase
 
 import (
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/service"
+	"ddd-bottomup/domain"
 	"time"
 )
 
@@ -21,11 +19,11 @@ type RecommendedCircleInfo struct {
 }
 
 type GetRecommendedCirclesUseCase struct {
-	circleRepository repository.CircleRepository
+	circleRepository domain.CircleRepository
 }
 
 func NewGetRecommendedCirclesUseCase(
-	circleRepository repository.CircleRepository,
+	circleRepository domain.CircleRepository,
 ) *GetRecommendedCirclesUseCase {
 	return &GetRecommendedCirclesUseCase{
 		circleRepository: circleRepository,
@@ -34,7 +32,7 @@ func NewGetRecommendedCirclesUseCase(
 
 func (uc *GetRecommendedCirclesUseCase) Execute() (*GetRecommendedCirclesOutput, error) {
 	// おすすめサークルサービスを作成
-	recommendationService := service.NewCircleRecommendationService(time.Now())
+	recommendationService := domain.NewCircleRecommendationService(time.Now())
 
 	// すべてのサークルを取得してフィルタリング
 	allCircles, err := uc.circleRepository.FindAll()
@@ -42,7 +40,7 @@ func (uc *GetRecommendedCirclesUseCase) Execute() (*GetRecommendedCirclesOutput,
 		return nil, err
 	}
 
-	var filteredCircles []*entity.Circle
+	var filteredCircles []*domain.Circle
 	for _, circle := range allCircles {
 		if recommendationService.IsRecommended(circle) {
 			filteredCircles = append(filteredCircles, circle)

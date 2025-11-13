@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"ddd-bottomup/domain/service"
+	"ddd-bottomup/domain"
 	"ddd-bottomup/infrastructure"
 	"testing"
 )
@@ -9,12 +9,13 @@ import (
 func TestCreateUserUseCase_Execute_Success(t *testing.T) {
 	// Arrange
 	repo := infrastructure.NewMemoryUserRepository()
-	userExistenceService := service.NewUserExistenceService(repo)
+	userExistenceService := domain.NewUserExistenceService(repo)
 	useCase := NewCreateUserUseCase(repo, userExistenceService)
 
 	input := CreateUserInput{
 		FirstName: "太郎",
 		LastName:  "田中",
+		E
 	}
 
 	// Act
@@ -35,7 +36,7 @@ func TestCreateUserUseCase_Execute_Success(t *testing.T) {
 
 	// リポジトリに保存されているか確認
 	memoryRepo := repo.(*repository.UserRepositoryMemory)
-	if memoryRepo.Count() != 1 {
+	memoryRepo := repo.(*infrastructure.MemoryUserRepository)
 		t.Errorf("Expected 1 user in repository, but got %d", memoryRepo.Count())
 	}
 }
@@ -44,12 +45,13 @@ func TestCreateUserUseCase_Execute_DuplicateName(t *testing.T) {
 	// Arrange
 	repo := infrastructure.NewMemoryUserRepository()
 	userExistenceService := service.NewUserExistenceService(repo)
-	useCase := NewCreateUserUseCase(repo, userExistenceService)
+	userExistenceService := domain.NewUserExistenceService(repo)
 
 	input := CreateUserInput{
 		FirstName: "太郎",
 		LastName:  "田中",
 	}
+		LastName:  "田
 
 	// 最初のユーザーを作成
 	_, err := useCase.Execute(input)
@@ -72,7 +74,7 @@ func TestCreateUserUseCase_Execute_DuplicateName(t *testing.T) {
 	// リポジトリには1人だけ保存されている
 	memoryRepo := repo.(*repository.UserRepositoryMemory)
 	if memoryRepo.Count() != 1 {
-		t.Errorf("Expected 1 user in repository, but got %d", memoryRepo.Count())
+	memoryRepo := repo.(*infrastructure.MemoryUserRepository)
 	}
 }
 
@@ -81,7 +83,7 @@ func TestCreateUserUseCase_Execute_InvalidName(t *testing.T) {
 	repo := infrastructure.NewMemoryUserRepository()
 	userExistenceService := service.NewUserExistenceService(repo)
 	useCase := NewCreateUserUseCase(repo, userExistenceService)
-
+	userExistenceService := domain.NewUserExistenceService(repo)
 	testCases := []struct {
 		name      string
 		firstName string
@@ -119,7 +121,7 @@ func TestCreateUserUseCase_Execute_MultipleUsers(t *testing.T) {
 	repo := infrastructure.NewMemoryUserRepository()
 	userExistenceService := service.NewUserExistenceService(repo)
 	useCase := NewCreateUserUseCase(repo, userExistenceService)
-
+	userExistenceService := domain.NewUserExistenceService(repo)
 	users := []CreateUserInput{
 		{FirstName: "太郎", LastName: "田中"},
 		{FirstName: "花子", LastName: "佐藤"},
@@ -144,7 +146,7 @@ func TestCreateUserUseCase_Execute_MultipleUsers(t *testing.T) {
 
 	memoryRepo := repo.(*repository.UserRepositoryMemory)
 	if memoryRepo.Count() != 3 {
-		t.Errorf("Expected 3 users in repository, but got %d", memoryRepo.Count())
+	memoryRepo := repo.(*infrastructure.MemoryUserRepository)
 	}
 
 	// 各ユーザーIDが一意であることを確認

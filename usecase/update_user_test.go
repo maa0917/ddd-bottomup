@@ -1,9 +1,7 @@
 package usecase
 
 import (
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/service"
-	"ddd-bottomup/domain/valueobject"
+	"ddd-bottomup/domain"
 	"ddd-bottomup/infrastructure"
 	"testing"
 )
@@ -13,18 +11,20 @@ func TestUpdateUserUseCase_Execute_Success(t *testing.T) {
 	repo := infrastructure.NewMemoryUserRepository()
 
 	// 既存ユーザーを作成・保存
-	originalName, _ := valueobject.NewFullName("太郎", "田中")
-	user := entity.NewUser(originalName)
+	originalName, _ := domain.NewFullName("太郎", "田中")
+	email, _ := domain.NewEmail("taro@example.com")
+	user := domain.NewUser(originalName, email, false)
 	err := repo.Save(user)
 	if err != nil {
 		t.Fatalf("Failed to save test user: %v", err)
 	}
 
-	useCase := NewUpdateUserUseCase(repo)
+	userExistenceService := domain.NewUserExistenceService(repo)
+	useCase := NewUpdateUserUseCase(repo, userExistenceService)
 	input := UpdateUserInput{
 		UserID:    user.ID().Value(),
-		FirstName: "次郎",
-		LastName:  "佐藤",
+		FirstName: func() *string { s := "次郎"; return &s }(),
+		LastName:  func() *string { s := "佐藤"; return &s }(),
 	}
 
 	// Act
@@ -65,13 +65,14 @@ func TestUpdateUserUseCase_Execute_Success(t *testing.T) {
 func TestUpdateUserUseCase_Execute_UserNotFound(t *testing.T) {
 	// Arrange
 	repo := infrastructure.NewMemoryUserRepository()
-	useCase := NewUpdateUserUseCase(repo)
+	userExistenceService := domain.NewUserExistenceService(repo)
+	useCase := NewUpdateUserUseCase(repo, userExistenceService)
 
-	nonExistentID := entity.NewUserID()
+	nonExistentID := domain.NewUserID()
 	input := UpdateUserInput{
 		UserID:    nonExistentID.Value(),
-		FirstName: "太郎",
-		LastName:  "田中",
+		FirstName: func() *string { s := "太郎"; return &s }(),
+		LastName:  func() *string { s := "田中"; return &s }(),
 	}
 
 	// Act
@@ -96,21 +97,24 @@ func TestUpdateUserUseCase_Execute_DuplicateName(t *testing.T) {
 	repo := infrastructure.NewMemoryUserRepository()
 
 	// 2人のユーザーを作成
-	user1Name, _ := valueobject.NewFullName("太郎", "田中")
-	user1 := entity.NewUser(user1Name)
+	user1Name, _ := domain.NewFullName("太郎", "田中")
+	email1, _ := domain.NewEmail("taro@example.com")
+	user1 := domain.NewUser(user1Name, email1, false)
 	repo.Save(user1)
 
-	user2Name, _ := valueobject.NewFullName("花子", "佐藤")
-	user2 := entity.NewUser(user2Name)
+	user2Name, _ := domain.NewFullName("花子", "佐藤")
+	email2, _ := domain.NewEmail("hanako@example.com")
+	user2 := domain.NewUser(user2Name, email2, false)
 	repo.Save(user2)
 
-	useCase := NewUpdateUserUseCase(repo)
+	userExistenceService := domain.NewUserExistenceService(repo)
+	useCase := NewUpdateUserUseCase(repo, userExistenceService)
 
 	// user2の名前をuser1と同じにしようとする
 	input := UpdateUserInput{
 		UserID:    user2.ID().Value(),
-		FirstName: "太郎",
-		LastName:  "田中",
+		FirstName: func() *string { s := "太郎"; return &s }(),
+		LastName:  func() *string { s := "田中"; return &s }(),
 	}
 
 	// Act
@@ -140,17 +144,19 @@ func TestUpdateUserUseCase_Execute_SameNameUpdate(t *testing.T) {
 	// Arrange
 	repo := infrastructure.NewMemoryUserRepository()
 
-	originalName, _ := valueobject.NewFullName("太郎", "田中")
-	user := entity.NewUser(originalName)
+	originalName, _ := domain.NewFullName("太郎", "田中")
+	email, _ := domain.NewEmail("taro@example.com")
+	user := domain.NewUser(originalName, email, false)
 	repo.Save(user)
 
-	useCase := NewUpdateUserUseCase(repo)
+	userExistenceService := domain.NewUserExistenceService(repo)
+	useCase := NewUpdateUserUseCase(repo, userExistenceService)
 
 	// 同じ名前に更新（自分自身なのでOK）
 	input := UpdateUserInput{
 		UserID:    user.ID().Value(),
-		FirstName: "太郎",
-		LastName:  "田中",
+		FirstName: func() *string { s := "太郎"; return &s }(),
+		LastName:  func() *string { s := "田中"; return &s }(),
 	}
 
 	// Act
@@ -174,11 +180,13 @@ func TestUpdateUserUseCase_Execute_InvalidName(t *testing.T) {
 	// Arrange
 	repo := infrastructure.NewMemoryUserRepository()
 
-	originalName, _ := valueobject.NewFullName("太郎", "田中")
-	user := entity.NewUser(originalName)
+	originalName, _ := domain.NewFullName("太郎", "田中")
+	email, _ := domain.NewEmail("taro@example.com")
+	user := domain.NewUser(originalName, email, false)
 	repo.Save(user)
 
-	useCase := NewUpdateUserUseCase(repo)
+	userExistenceService := domain.NewUserExistenceService(repo)
+	useCase := NewUpdateUserUseCase(repo, userExistenceService)
 
 	testCases := []struct {
 		name      string
@@ -194,8 +202,8 @@ func TestUpdateUserUseCase_Execute_InvalidName(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			input := UpdateUserInput{
 				UserID:    user.ID().Value(),
-				FirstName: tc.firstName,
-				LastName:  tc.lastName,
+				FirstName: &tc.firstName,
+				LastName:  &tc.lastName,
 			}
 
 			// Act

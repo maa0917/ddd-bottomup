@@ -2,9 +2,7 @@ package infrastructure
 
 import (
 	"database/sql"
-	"ddd-bottomup/domain/entity"
-	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/valueobject"
+	"ddd-bottomup/domain"
 	"strings"
 	"time"
 
@@ -15,13 +13,13 @@ type MySQLCircleRepository struct {
 	db *sql.DB
 }
 
-func NewMySQLCircleRepository(db *sql.DB) repository.CircleRepository {
+func NewMySQLCircleRepository(db *sql.DB) domain.CircleRepository {
 	return &MySQLCircleRepository{
 		db: db,
 	}
 }
 
-func (r *MySQLCircleRepository) FindByID(id *entity.CircleID) (*entity.Circle, error) {
+func (r *MySQLCircleRepository) FindByID(id *domain.CircleID) (*domain.Circle, error) {
 	query := `
 		SELECT id, name, owner_id, created_at 
 		FROM circles 
@@ -41,9 +39,9 @@ func (r *MySQLCircleRepository) FindByID(id *entity.CircleID) (*entity.Circle, e
 	}
 
 	// エンティティの再構成
-	reconstructedID, _ := entity.ReconstructCircleID(circleID)
-	circleName, _ := valueobject.NewCircleName(name)
-	reconstructedOwnerID, _ := entity.ReconstructUserID(ownerID)
+	reconstructedID, _ := domain.ReconstructCircleID(circleID)
+	circleName, _ := domain.NewCircleName(name)
+	reconstructedOwnerID, _ := domain.ReconstructUserID(ownerID)
 
 	// メンバーIDを取得
 	memberIDs, err := r.getMemberIDs(reconstructedID)
@@ -51,10 +49,10 @@ func (r *MySQLCircleRepository) FindByID(id *entity.CircleID) (*entity.Circle, e
 		return nil, err
 	}
 
-	return entity.ReconstructCircle(reconstructedID, circleName, reconstructedOwnerID, memberIDs, createdAt), nil
+	return domain.ReconstructCircle(reconstructedID, circleName, reconstructedOwnerID, memberIDs, createdAt), nil
 }
 
-func (r *MySQLCircleRepository) FindByName(name *valueobject.CircleName) (*entity.Circle, error) {
+func (r *MySQLCircleRepository) FindByName(name *domain.CircleName) (*domain.Circle, error) {
 	query := `
 		SELECT id, name, owner_id, created_at 
 		FROM circles 
@@ -74,9 +72,9 @@ func (r *MySQLCircleRepository) FindByName(name *valueobject.CircleName) (*entit
 	}
 
 	// エンティティの再構成
-	reconstructedID, _ := entity.ReconstructCircleID(circleID)
-	reconstructedName, _ := valueobject.NewCircleName(circleName)
-	reconstructedOwnerID, _ := entity.ReconstructUserID(ownerID)
+	reconstructedID, _ := domain.ReconstructCircleID(circleID)
+	reconstructedName, _ := domain.NewCircleName(circleName)
+	reconstructedOwnerID, _ := domain.ReconstructUserID(ownerID)
 
 	// メンバーIDを取得
 	memberIDs, err := r.getMemberIDs(reconstructedID)
@@ -84,10 +82,10 @@ func (r *MySQLCircleRepository) FindByName(name *valueobject.CircleName) (*entit
 		return nil, err
 	}
 
-	return entity.ReconstructCircle(reconstructedID, reconstructedName, reconstructedOwnerID, memberIDs, createdAt), nil
+	return domain.ReconstructCircle(reconstructedID, reconstructedName, reconstructedOwnerID, memberIDs, createdAt), nil
 }
 
-func (r *MySQLCircleRepository) FindAll() ([]*entity.Circle, error) {
+func (r *MySQLCircleRepository) FindAll() ([]*domain.Circle, error) {
 	query := `
 		SELECT id, name, owner_id, created_at 
 		FROM circles 
@@ -103,7 +101,7 @@ func (r *MySQLCircleRepository) FindAll() ([]*entity.Circle, error) {
 	return r.scanCircles(rows)
 }
 
-func (r *MySQLCircleRepository) Save(circle *entity.Circle) error {
+func (r *MySQLCircleRepository) Save(circle *domain.Circle) error {
 	// トランザクション開始
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -158,15 +156,14 @@ func (r *MySQLCircleRepository) Save(circle *entity.Circle) error {
 	return tx.Commit()
 }
 
-
-func (r *MySQLCircleRepository) Delete(id *entity.CircleID) error {
+func (r *MySQLCircleRepository) Delete(id *domain.CircleID) error {
 	query := "DELETE FROM circles WHERE id = ?"
 	_, err := r.db.Exec(query, id.Value())
 	return err
 }
 
 // getMemberIDs はサークルのメンバーIDを取得します
-func (r *MySQLCircleRepository) getMemberIDs(circleID *entity.CircleID) ([]*entity.UserID, error) {
+func (r *MySQLCircleRepository) getMemberIDs(circleID *domain.CircleID) ([]*domain.UserID, error) {
 	query := "SELECT user_id FROM circle_members WHERE circle_id = ?"
 	rows, err := r.db.Query(query, circleID.Value())
 	if err != nil {
@@ -174,14 +171,14 @@ func (r *MySQLCircleRepository) getMemberIDs(circleID *entity.CircleID) ([]*enti
 	}
 	defer rows.Close()
 
-	var memberIDs []*entity.UserID
+	var memberIDs []*domain.UserID
 	for rows.Next() {
 		var userID string
 		if err := rows.Scan(&userID); err != nil {
 			return nil, err
 		}
 
-		memberID, _ := entity.ReconstructUserID(userID)
+		memberID, _ := domain.ReconstructUserID(userID)
 		memberIDs = append(memberIDs, memberID)
 	}
 
@@ -189,8 +186,8 @@ func (r *MySQLCircleRepository) getMemberIDs(circleID *entity.CircleID) ([]*enti
 }
 
 // scanCircles は複数のサークルをスキャンします
-func (r *MySQLCircleRepository) scanCircles(rows *sql.Rows) ([]*entity.Circle, error) {
-	var circles []*entity.Circle
+func (r *MySQLCircleRepository) scanCircles(rows *sql.Rows) ([]*domain.Circle, error) {
+	var circles []*domain.Circle
 
 	for rows.Next() {
 		var circleID, name, ownerID string
@@ -201,9 +198,9 @@ func (r *MySQLCircleRepository) scanCircles(rows *sql.Rows) ([]*entity.Circle, e
 		}
 
 		// エンティティの再構成
-		reconstructedID, _ := entity.ReconstructCircleID(circleID)
-		circleName, _ := valueobject.NewCircleName(name)
-		reconstructedOwnerID, _ := entity.ReconstructUserID(ownerID)
+		reconstructedID, _ := domain.ReconstructCircleID(circleID)
+		circleName, _ := domain.NewCircleName(name)
+		reconstructedOwnerID, _ := domain.ReconstructUserID(ownerID)
 
 		// メンバーIDを取得
 		memberIDs, err := r.getMemberIDs(reconstructedID)
@@ -211,7 +208,7 @@ func (r *MySQLCircleRepository) scanCircles(rows *sql.Rows) ([]*entity.Circle, e
 			return nil, err
 		}
 
-		circle := entity.ReconstructCircle(reconstructedID, circleName, reconstructedOwnerID, memberIDs, createdAt)
+		circle := domain.ReconstructCircle(reconstructedID, circleName, reconstructedOwnerID, memberIDs, createdAt)
 		circles = append(circles, circle)
 	}
 

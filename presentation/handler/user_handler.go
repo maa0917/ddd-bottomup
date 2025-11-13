@@ -64,9 +64,9 @@ type ErrorResponse struct {
 
 func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	path := strings.TrimPrefix(r.URL.Path, "/users")
-	
+
 	switch r.Method {
 	case http.MethodPost:
 		if path == "" || path == "/" {
@@ -117,8 +117,8 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		status := http.StatusInternalServerError
 		if strings.Contains(err.Error(), "already exists") ||
-		   strings.Contains(err.Error(), "invalid") ||
-		   strings.Contains(err.Error(), "cannot be empty") {
+			strings.Contains(err.Error(), "invalid") ||
+			strings.Contains(err.Error(), "cannot be empty") {
 			status = http.StatusBadRequest
 		}
 		h.writeError(w, err.Error(), status)
@@ -181,8 +181,8 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request, userID 
 		if strings.Contains(err.Error(), "not found") {
 			status = http.StatusNotFound
 		} else if strings.Contains(err.Error(), "already exists") ||
-		          strings.Contains(err.Error(), "invalid") ||
-		          strings.Contains(err.Error(), "cannot be empty") {
+			strings.Contains(err.Error(), "invalid") ||
+			strings.Contains(err.Error(), "cannot be empty") {
 			status = http.StatusBadRequest
 		}
 		h.writeError(w, err.Error(), status)
