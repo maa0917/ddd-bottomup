@@ -111,6 +111,10 @@ func (s *UserExistenceService) Exists(user *User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	// 同じユーザーIDの場合は重複ではない
+	if existingUser != nil && existingUser.ID().Equals(user.ID()) {
+		return false, nil
+	}
 	return existingUser != nil, nil
 }
 

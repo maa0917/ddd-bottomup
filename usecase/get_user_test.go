@@ -68,8 +68,9 @@ func TestGetUserUseCase_Execute_UserNotFound(t *testing.T) {
 		t.Error("Expected no output for non-existent user, but got output")
 	}
 
-	if err.Error() != "user not found" {
-		t.Errorf("Expected 'user not found' error, but got '%s'", err.Error())
+	// エラーの型を確認
+	if _, ok := err.(domain.UserNotFoundError); !ok {
+		t.Errorf("Expected UserNotFoundError, but got %T", err)
 	}
 }
 
@@ -115,9 +116,9 @@ func TestGetUserUseCase_Execute_MultipleUsers(t *testing.T) {
 
 	// 複数ユーザーを作成
 	users := []CreateUserInput{
-		{FirstName: "太郎", LastName: "田中"},
-		{FirstName: "花子", LastName: "佐藤"},
-		{FirstName: "次郎", LastName: "山田"},
+		{FirstName: "太郎", LastName: "田中", Email: "taro@example.com"},
+		{FirstName: "花子", LastName: "佐藤", Email: "hanako@example.com"},
+		{FirstName: "次郎", LastName: "山田", Email: "jiro@example.com"},
 	}
 
 	var createdUserIDs []string

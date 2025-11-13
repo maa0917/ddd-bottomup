@@ -223,12 +223,15 @@ func TestUserExistenceService_Exists_UserFound(t *testing.T) {
 	// テストユーザーを作成してリポジトリに保存
 	name, _ := NewFullName("太郎", "田中")
 	email, _ := NewEmail("taro@example.com")
-	user := NewUser(name, email, false)
-	repo.users[user.Name().String()] = user
+	user1 := NewUser(name, email, false)
+	repo.users[user1.Name().String()] = user1
+
+	// 異なるIDで同じ名前のユーザーを作成
+	user2 := NewUser(name, email, false)
 
 	service := NewUserExistenceService(repo)
 
-	exists, err := service.Exists(user)
+	exists, err := service.Exists(user2)
 	if err != nil {
 		t.Errorf("Expected no error, but got: %v", err)
 	}

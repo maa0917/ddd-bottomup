@@ -60,15 +60,19 @@ func (uc *UpdateUserUseCase) Execute(input UpdateUserInput) (*UpdateUserOutput, 
 			return nil, err
 		}
 
-		user.ChangeName(newName)
+		// 現在の名前と同じかチェック
+		if !user.Name().Equals(newName) {
+			// 名前変更前に重複チェック（変更先の名前で一時的にユーザーを作成してチェック）
+			tempUser := domain.ReconstructUser(domain.NewUserID(), newName, user.Email(), user.IsPremium())
+			exists, err := uc.userExistenceService.Exists(tempUser)
+			if err != nil {
+				return nil, err
+			}
+			if exists {
+				return nil, domain.DuplicateUserNameError{Name: newName.String()}
+			}
 
-		// 名前変更後に重複チェック
-		exists, err := uc.userExistenceService.Exists(user)
-		if err != nil {
-			return nil, err
-		}
-		if exists {
-			return nil, domain.DuplicateUserNameError{Name: user.Name().String()}
+			user.ChangeName(newName)
 		}
 	}
 

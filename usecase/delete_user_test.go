@@ -63,8 +63,9 @@ func TestDeleteUserUseCase_Execute_UserNotFound(t *testing.T) {
 		t.Error("Expected error for non-existent user, but got nil")
 	}
 
-	if err.Error() != "user not found" {
-		t.Errorf("Expected 'user not found' error, but got '%s'", err.Error())
+	// エラーの型を確認
+	if _, ok := err.(domain.UserNotFoundError); !ok {
+		t.Errorf("Expected UserNotFoundError, but got %T", err)
 	}
 }
 
@@ -178,7 +179,8 @@ func TestDeleteUserUseCase_Execute_DeleteSameUserTwice(t *testing.T) {
 		t.Error("Expected error for second deletion, but got nil")
 	}
 
-	if err.Error() != "user not found" {
-		t.Errorf("Expected 'user not found' error, but got '%s'", err.Error())
+	// エラーの型を確認
+	if _, ok := err.(domain.UserNotFoundError); !ok {
+		t.Errorf("Expected UserNotFoundError, but got %T", err)
 	}
 }

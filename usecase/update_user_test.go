@@ -87,8 +87,9 @@ func TestUpdateUserUseCase_Execute_UserNotFound(t *testing.T) {
 		t.Error("Expected no output for non-existent user, but got output")
 	}
 
-	if err.Error() != "user not found" {
-		t.Errorf("Expected 'user not found' error, but got '%s'", err.Error())
+	// エラーの型を確認
+	if _, ok := err.(domain.UserNotFoundError); !ok {
+		t.Errorf("Expected UserNotFoundError, but got %T", err)
 	}
 }
 
@@ -129,8 +130,9 @@ func TestUpdateUserUseCase_Execute_DuplicateName(t *testing.T) {
 		t.Error("Expected no output for duplicate name, but got output")
 	}
 
-	if err.Error() != "name already exists" {
-		t.Errorf("Expected 'name already exists' error, but got '%s'", err.Error())
+	// エラーの型を確認
+	if _, ok := err.(domain.DuplicateUserNameError); !ok {
+		t.Errorf("Expected DuplicateUserNameError, but got %T", err)
 	}
 
 	// user2の名前が変更されていないことを確認
@@ -216,6 +218,11 @@ func TestUpdateUserUseCase_Execute_InvalidName(t *testing.T) {
 
 			if output != nil {
 				t.Error("Expected no output for invalid name, but got output")
+			}
+
+			// エラーの型を確認
+			if _, ok := err.(domain.EmptyFieldError); !ok {
+				t.Errorf("Expected EmptyFieldError, but got %T", err)
 			}
 		})
 	}
