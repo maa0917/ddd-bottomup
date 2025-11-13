@@ -3,7 +3,7 @@ package usecase
 import (
 	"ddd-bottomup/domain/entity"
 	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/specification"
+	"ddd-bottomup/domain/service"
 	"errors"
 )
 
@@ -12,12 +12,12 @@ type GetCircleInput struct {
 }
 
 type GetCircleOutput struct {
-	CircleID        string
-	CircleName      string
-	OwnerID         string
-	MemberIDs       []string
-	TotalMembers    int
-	AvailableSlots  int
+	CircleID       string
+	CircleName     string
+	OwnerID        string
+	MemberIDs      []string
+	TotalMembers   int
+	AvailableSlots int
 }
 
 type GetCircleUseCase struct {
@@ -71,16 +71,16 @@ func (uc *GetCircleUseCase) Execute(input GetCircleInput) (*GetCircleOutput, err
 
 	// プレミアム制限を考慮した利用可能枠を計算
 	circleMembers := entity.NewCircleMembers(owner, members)
-	limitSpec := specification.NewCircleMemberLimitSpecification()
+	memberService := service.NewCircleMemberService()
 
 	// アウトプットに変換
 	return &GetCircleOutput{
-		CircleID:        circle.ID().Value(),
-		CircleName:      circle.Name().Value(),
-		OwnerID:         circle.OwnerID().Value(),
-		MemberIDs:       convertUserIDsToStrings(circle.GetMemberIDs()),
-		TotalMembers:    circle.GetTotalParticipants(),
-		AvailableSlots:  limitSpec.GetAvailableSlots(circleMembers),
+		CircleID:       circle.ID().Value(),
+		CircleName:     circle.Name().Value(),
+		OwnerID:        circle.OwnerID().Value(),
+		MemberIDs:      convertUserIDsToStrings(circle.GetMemberIDs()),
+		TotalMembers:   circle.GetTotalParticipants(),
+		AvailableSlots: memberService.GetAvailableSlots(circleMembers),
 	}, nil
 }
 

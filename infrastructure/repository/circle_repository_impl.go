@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"ddd-bottomup/domain/entity"
 	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/specification"
 	"ddd-bottomup/domain/valueobject"
 	"strings"
 	"time"
@@ -159,21 +158,6 @@ func (r *CircleRepositoryImpl) Save(circle *entity.Circle) error {
 	return tx.Commit()
 }
 
-func (r *CircleRepositoryImpl) FindBySpecification(spec specification.CircleSpecification) ([]*entity.Circle, error) {
-	allCircles, err := r.FindAll()
-	if err != nil {
-		return nil, err
-	}
-
-	var results []*entity.Circle
-	for _, circle := range allCircles {
-		if spec.IsSatisfiedBy(circle) {
-			results = append(results, circle)
-		}
-	}
-
-	return results, nil
-}
 
 func (r *CircleRepositoryImpl) Delete(id *entity.CircleID) error {
 	query := "DELETE FROM circles WHERE id = ?"

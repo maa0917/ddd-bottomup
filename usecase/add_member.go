@@ -3,7 +3,7 @@ package usecase
 import (
 	"ddd-bottomup/domain/entity"
 	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/specification"
+	"ddd-bottomup/domain/service"
 	"errors"
 	"fmt"
 )
@@ -90,9 +90,9 @@ func (uc *AddMemberUseCase) Execute(input AddMemberInput) error {
 
 	// プレミアム制限をチェック
 	circleMembers := entity.NewCircleMembers(owner, members)
-	limitSpec := specification.NewCircleMemberLimitSpecification()
-	if !limitSpec.IsSatisfiedBy(circleMembers) {
-		maxLimit := limitSpec.GetMaxLimit(circleMembers)
+	memberService := service.NewCircleMemberService()
+	if !memberService.CanAddMember(circleMembers) {
+		maxLimit := memberService.GetMaxLimit(circleMembers)
 		return fmt.Errorf("circle is full: maximum %d participants (including owner) allowed", maxLimit)
 	}
 

@@ -3,7 +3,6 @@ package repository
 import (
 	"ddd-bottomup/domain/entity"
 	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/specification"
 	"ddd-bottomup/domain/valueobject"
 	"sync"
 )
@@ -69,18 +68,6 @@ func (r *CircleRepositoryMemory) FindAll() ([]*entity.Circle, error) {
 	return circles, nil
 }
 
-func (r *CircleRepositoryMemory) FindBySpecification(spec specification.Specification[*entity.Circle]) ([]*entity.Circle, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	
-	var results []*entity.Circle
-	for _, circle := range r.circles {
-		if spec.IsSatisfiedBy(circle) {
-			results = append(results, circle)
-		}
-	}
-	return results, nil
-}
 
 func (r *CircleRepositoryMemory) Count() int {
 	r.mu.RLock()

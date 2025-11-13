@@ -1,8 +1,9 @@
 package usecase
 
 import (
+	"ddd-bottomup/domain/entity"
 	"ddd-bottomup/domain/repository"
-	"ddd-bottomup/domain/specification"
+	"ddd-bottomup/domain/service"
 	"time"
 )
 
@@ -32,13 +33,20 @@ func NewGetRecommendedCirclesUseCase(
 }
 
 func (uc *GetRecommendedCirclesUseCase) Execute() (*GetRecommendedCirclesOutput, error) {
-	// おすすめサークル仕様を作成
-	recommendedSpec := specification.NewRecommendedCircleSpecification(time.Now())
+	// おすすめサークルサービスを作成
+	recommendationService := service.NewCircleRecommendationService(time.Now())
 
-	// リポジトリでフィルタリング済みのサークルを取得
-	filteredCircles, err := uc.circleRepository.FindBySpecification(recommendedSpec)
+	// すべてのサークルを取得してフィルタリング
+	allCircles, err := uc.circleRepository.FindAll()
 	if err != nil {
 		return nil, err
+	}
+
+	var filteredCircles []*entity.Circle
+	for _, circle := range allCircles {
+		if recommendationService.IsRecommended(circle) {
+			filteredCircles = append(filteredCircles, circle)
+		}
 	}
 
 	var recommendedCircles []RecommendedCircleInfo
