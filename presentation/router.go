@@ -1,7 +1,6 @@
-package router
+package presentation
 
 import (
-	"ddd-bottomup/presentation/handler"
 	"ddd-bottomup/usecase"
 	"net/http"
 )
@@ -14,7 +13,7 @@ func NewRouter(
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	userHandler := handler.NewUserHandler(
+	userHandler := NewUserHandler(
 		createUserUseCase,
 		getUserUseCase,
 		updateUserUseCase,

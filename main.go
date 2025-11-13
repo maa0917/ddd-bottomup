@@ -3,7 +3,7 @@ package main
 import (
 	"ddd-bottomup/domain"
 	"ddd-bottomup/infrastructure"
-	"ddd-bottomup/presentation/router"
+	"ddd-bottomup/presentation"
 	"ddd-bottomup/usecase"
 	"log"
 	"net/http"
@@ -27,7 +27,7 @@ func main() {
 	log.Println("Application setup completed successfully!")
 
 	// HTTPルーターの設定
-	mux := router.NewRouter(
+	mux := presentation.NewRouter(
 		app.CreateUserUseCase,
 		app.GetUserUseCase,
 		app.UpdateUserUseCase,
