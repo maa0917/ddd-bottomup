@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"ddd-bottomup/domain"
-	"errors"
 )
 
 type GetUserInput struct {
@@ -47,7 +46,7 @@ func (uc *GetUserUseCase) Execute(input GetUserInput) (*GetUserOutput, error) {
 	}
 
 	if user == nil {
-		return nil, errors.New("user not found")
+		return nil, domain.UserNotFoundError{ID: input.UserID}
 	}
 
 	return NewGetUserOutput(user), nil

@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"ddd-bottomup/domain"
-	"errors"
 )
 
 type UpdateUserInput struct {
@@ -51,7 +50,7 @@ func (uc *UpdateUserUseCase) Execute(input UpdateUserInput) (*UpdateUserOutput, 
 		return nil, err
 	}
 	if user == nil {
-		return nil, errors.New("user not found")
+		return nil, domain.UserNotFoundError{ID: input.UserID}
 	}
 
 	// 名前更新（指定されている場合）
@@ -69,7 +68,7 @@ func (uc *UpdateUserUseCase) Execute(input UpdateUserInput) (*UpdateUserOutput, 
 			return nil, err
 		}
 		if exists {
-			return nil, errors.New("name already exists")
+			return nil, domain.DuplicateUserNameError{Name: user.Name().String()}
 		}
 	}
 

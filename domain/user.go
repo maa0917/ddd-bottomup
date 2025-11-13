@@ -1,7 +1,8 @@
 package domain
 
 import (
-	"errors"
+	"net/http"
+
 	"github.com/google/uuid"
 )
 
@@ -15,10 +16,10 @@ func NewUserID() *UserID {
 
 func ReconstructUserID(value string) (*UserID, error) {
 	if value == "" {
-		return nil, errors.New("user ID cannot be empty")
+		return nil, EmptyFieldError{Field: "user ID"}
 	}
 	if _, err := uuid.Parse(value); err != nil {
-		return nil, errors.New("invalid user ID format")
+		return nil, InvalidUserIDError{Value: value}
 	}
 	return &UserID{value: value}, nil
 }
@@ -111,4 +112,53 @@ func (s *UserExistenceService) Exists(user *User) (bool, error) {
 		return false, err
 	}
 	return existingUser != nil, nil
+}
+
+// User related errors
+type UserNotFoundError struct {
+	ID string
+}
+
+func (e UserNotFoundError) Error() string {
+	return "user not found: " + e.ID
+}
+
+func (e UserNotFoundError) HTTPStatus() int {
+	return http.StatusNotFound
+}
+
+type UserAlreadyExistsError struct {
+	Email string
+}
+
+func (e UserAlreadyExistsError) Error() string {
+	return "user with email already exists: " + e.Email
+}
+
+func (e UserAlreadyExistsError) HTTPStatus() int {
+	return http.StatusBadRequest
+}
+
+type DuplicateUserNameError struct {
+	Name string
+}
+
+func (e DuplicateUserNameError) Error() string {
+	return "user with name already exists: " + e.Name
+}
+
+func (e DuplicateUserNameError) HTTPStatus() int {
+	return http.StatusBadRequest
+}
+
+type InvalidUserIDError struct {
+	Value string
+}
+
+func (e InvalidUserIDError) Error() string {
+	return "invalid user ID: " + e.Value
+}
+
+func (e InvalidUserIDError) HTTPStatus() int {
+	return http.StatusBadRequest
 }

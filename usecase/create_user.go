@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"ddd-bottomup/domain"
-	"errors"
 )
 
 type CreateUserInput struct {
@@ -49,7 +48,7 @@ func (uc *CreateUserUseCase) Execute(input CreateUserInput) (*CreateUserOutput, 
 		return nil, err
 	}
 	if exists {
-		return nil, errors.New("user already exists")
+		return nil, domain.DuplicateUserNameError{Name: user.Name().String()}
 	}
 
 	if err := uc.userRepository.Save(user); err != nil {

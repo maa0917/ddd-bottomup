@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"ddd-bottomup/domain"
-	"errors"
 )
 
 type DeleteUserInput struct {
@@ -30,7 +29,7 @@ func (uc *DeleteUserUseCase) Execute(input DeleteUserInput) error {
 		return err
 	}
 	if user == nil {
-		return errors.New("user not found")
+		return domain.UserNotFoundError{ID: input.UserID}
 	}
 
 	return uc.userRepository.Delete(userID)

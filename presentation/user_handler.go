@@ -1,10 +1,11 @@
 package presentation
 
 import (
+	"ddd-bottomup/domain"
 	"ddd-bottomup/usecase"
 	"encoding/json"
+	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -80,13 +81,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	output, err := h.createUserUseCase.Execute(input)
 	if err != nil {
-		status := http.StatusInternalServerError
-		if strings.Contains(err.Error(), "already exists") ||
-			strings.Contains(err.Error(), "invalid") ||
-			strings.Contains(err.Error(), "cannot be empty") {
-			status = http.StatusBadRequest
-		}
-		h.writeError(w, err.Error(), status)
+		h.handleError(w, err)
 		return
 	}
 
@@ -107,13 +102,7 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	output, err := h.getUserUseCase.Execute(input)
 	if err != nil {
-		status := http.StatusInternalServerError
-		if strings.Contains(err.Error(), "not found") {
-			status = http.StatusNotFound
-		} else if strings.Contains(err.Error(), "invalid") {
-			status = http.StatusBadRequest
-		}
-		h.writeError(w, err.Error(), status)
+		h.handleError(w, err)
 		return
 	}
 
@@ -146,15 +135,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	output, err := h.updateUserUseCase.Execute(input)
 	if err != nil {
-		status := http.StatusInternalServerError
-		if strings.Contains(err.Error(), "not found") {
-			status = http.StatusNotFound
-		} else if strings.Contains(err.Error(), "already exists") ||
-			strings.Contains(err.Error(), "invalid") ||
-			strings.Contains(err.Error(), "cannot be empty") {
-			status = http.StatusBadRequest
-		}
-		h.writeError(w, err.Error(), status)
+		h.handleError(w, err)
 		return
 	}
 
@@ -178,17 +159,22 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	err := h.deleteUserUseCase.Execute(input)
 	if err != nil {
-		status := http.StatusInternalServerError
-		if strings.Contains(err.Error(), "not found") {
-			status = http.StatusNotFound
-		} else if strings.Contains(err.Error(), "invalid") {
-			status = http.StatusBadRequest
-		}
-		h.writeError(w, err.Error(), status)
+		h.handleError(w, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *UserHandler) handleError(w http.ResponseWriter, err error) {
+	var domainErr domain.DomainError
+	if errors.As(err, &domainErr) {
+		// ドメインエラーの場合、適切なHTTPステータスを使用
+		h.writeError(w, err.Error(), domainErr.HTTPStatus())
+	} else {
+		// その他のエラーは内部サーバーエラー
+		h.writeError(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 func (h *UserHandler) writeError(w http.ResponseWriter, message string, status int) {

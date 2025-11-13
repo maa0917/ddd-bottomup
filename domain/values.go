@@ -1,8 +1,8 @@
 package domain
 
 import (
-	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 )
@@ -36,12 +36,12 @@ func (e *Email) String() string {
 
 func validateEmail(email string) error {
 	if email == "" {
-		return errors.New("email cannot be empty")
+		return EmptyFieldError{Field: "email"}
 	}
 
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !emailRegex.MatchString(email) {
-		return fmt.Errorf("invalid email format: %s", email)
+		return InvalidEmailError{Value: email}
 	}
 
 	return nil
@@ -89,11 +89,11 @@ func (f *FullName) Equals(other *FullName) bool {
 func validateName(name string, nameType string) error {
 	trimmed := strings.TrimSpace(name)
 	if trimmed == "" {
-		return errors.New(nameType + " cannot be empty")
+		return EmptyFieldError{Field: nameType}
 	}
 
 	if len(trimmed) > 50 {
-		return errors.New(nameType + " cannot exceed 50 characters")
+		return EmptyFieldError{Field: nameType + " (exceeds 50 characters)"}
 	}
 
 	return nil
@@ -106,15 +106,15 @@ type CircleName struct {
 
 func NewCircleName(value string) (*CircleName, error) {
 	if strings.TrimSpace(value) == "" {
-		return nil, errors.New("circle name cannot be empty")
+		return nil, EmptyFieldError{Field: "circle name"}
 	}
 
 	if len(value) > 50 {
-		return nil, errors.New("circle name cannot exceed 50 characters")
+		return nil, InvalidCircleNameError{Value: value, Reason: "cannot exceed 50 characters"}
 	}
 
 	if len(value) < 3 {
-		return nil, errors.New("circle name must be at least 3 characters")
+		return nil, InvalidCircleNameError{Value: value, Reason: "must be at least 3 characters"}
 	}
 
 	return &CircleName{value: strings.TrimSpace(value)}, nil
@@ -223,17 +223,17 @@ func (m *Money) IsZero() bool {
 
 func (m *Money) validateSameCurrency(other *Money) error {
 	if other == nil {
-		return errors.New("cannot operate with nil money")
+		return EmptyFieldError{Field: "money"}
 	}
 	if m.currency != other.currency {
-		return fmt.Errorf("cannot operate between different currencies: %s and %s", m.currency, other.currency)
+		return CurrencyMismatchError{Currency1: m.currency, Currency2: other.currency}
 	}
 	return nil
 }
 
 func validateCurrency(currency string) error {
 	if currency == "" {
-		return errors.New("currency cannot be empty")
+		return EmptyFieldError{Field: "currency"}
 	}
 
 	currency = strings.ToUpper(currency)
@@ -247,8 +247,71 @@ func validateCurrency(currency string) error {
 	}
 
 	if !validCurrencies[currency] {
-		return fmt.Errorf("unsupported currency: %s", currency)
+		return InvalidCurrencyError{Value: currency}
 	}
 
 	return nil
+}
+
+// Validation errors
+type EmptyFieldError struct {
+	Field string
+}
+
+func (e EmptyFieldError) Error() string {
+	return "field cannot be empty: " + e.Field
+}
+
+func (e EmptyFieldError) HTTPStatus() int {
+	return http.StatusBadRequest
+}
+
+type InvalidEmailError struct {
+	Value string
+}
+
+func (e InvalidEmailError) Error() string {
+	return "invalid email format: " + e.Value
+}
+
+func (e InvalidEmailError) HTTPStatus() int {
+	return http.StatusBadRequest
+}
+
+type InvalidCircleNameError struct {
+	Value  string
+	Reason string
+}
+
+func (e InvalidCircleNameError) Error() string {
+	return "invalid circle name '" + e.Value + "': " + e.Reason
+}
+
+func (e InvalidCircleNameError) HTTPStatus() int {
+	return http.StatusBadRequest
+}
+
+type InvalidCurrencyError struct {
+	Value string
+}
+
+func (e InvalidCurrencyError) Error() string {
+	return "invalid currency: " + e.Value
+}
+
+func (e InvalidCurrencyError) HTTPStatus() int {
+	return http.StatusBadRequest
+}
+
+type CurrencyMismatchError struct {
+	Currency1 string
+	Currency2 string
+}
+
+func (e CurrencyMismatchError) Error() string {
+	return "cannot operate between different currencies: " + e.Currency1 + " and " + e.Currency2
+}
+
+func (e CurrencyMismatchError) HTTPStatus() int {
+	return http.StatusBadRequest
 }
