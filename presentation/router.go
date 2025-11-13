@@ -3,8 +3,10 @@ package presentation
 import (
 	"ddd-bottomup/usecase"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func NewRouter(
@@ -15,6 +17,12 @@ func NewRouter(
 ) *chi.Mux {
 	r := chi.NewRouter()
 
+	// Middleware
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(middleware.SetHeader("Content-Type", "application/json"))
+
 	userHandler := NewUserHandler(
 		createUserUseCase,
 		getUserUseCase,
@@ -24,7 +32,6 @@ func NewRouter(
 
 	// Health check endpoint
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status": "ok"}`))
 	})
