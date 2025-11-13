@@ -2,13 +2,13 @@ package usecase
 
 import (
 	"ddd-bottomup/domain/service"
-	"ddd-bottomup/infrastructure/repository"
+	"ddd-bottomup/infrastructure"
 	"testing"
 )
 
 func TestCreateUserUseCase_Execute_Success(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
+	repo := infrastructure.NewMemoryUserRepository()
 	userExistenceService := service.NewUserExistenceService(repo)
 	useCase := NewCreateUserUseCase(repo, userExistenceService)
 
@@ -42,7 +42,7 @@ func TestCreateUserUseCase_Execute_Success(t *testing.T) {
 
 func TestCreateUserUseCase_Execute_DuplicateName(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
+	repo := infrastructure.NewMemoryUserRepository()
 	userExistenceService := service.NewUserExistenceService(repo)
 	useCase := NewCreateUserUseCase(repo, userExistenceService)
 
@@ -78,7 +78,7 @@ func TestCreateUserUseCase_Execute_DuplicateName(t *testing.T) {
 
 func TestCreateUserUseCase_Execute_InvalidName(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
+	repo := infrastructure.NewMemoryUserRepository()
 	userExistenceService := service.NewUserExistenceService(repo)
 	useCase := NewCreateUserUseCase(repo, userExistenceService)
 
@@ -116,7 +116,7 @@ func TestCreateUserUseCase_Execute_InvalidName(t *testing.T) {
 
 func TestCreateUserUseCase_Execute_MultipleUsers(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
+	repo := infrastructure.NewMemoryUserRepository()
 	userExistenceService := service.NewUserExistenceService(repo)
 	useCase := NewCreateUserUseCase(repo, userExistenceService)
 

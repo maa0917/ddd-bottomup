@@ -4,14 +4,14 @@ import (
 	"ddd-bottomup/domain/entity"
 	"ddd-bottomup/domain/service"
 	"ddd-bottomup/domain/valueobject"
-	"ddd-bottomup/infrastructure/repository"
+	"ddd-bottomup/infrastructure"
 	"testing"
 )
 
 func TestDeleteUserUseCase_Execute_Success(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
-	
+	repo := infrastructure.NewMemoryUserRepository()
+
 	// テスト用のユーザーを作成・保存
 	fullName, _ := valueobject.NewFullName("太郎", "田中")
 	email, _ := valueobject.NewEmail("taro@example.com")
@@ -20,7 +20,7 @@ func TestDeleteUserUseCase_Execute_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to save test user: %v", err)
 	}
-	
+
 	useCase := NewDeleteUserUseCase(repo)
 	input := DeleteUserInput{UserID: user.ID().Value()}
 
@@ -50,9 +50,9 @@ func TestDeleteUserUseCase_Execute_Success(t *testing.T) {
 
 func TestDeleteUserUseCase_Execute_UserNotFound(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
+	repo := infrastructure.NewMemoryUserRepository()
 	useCase := NewDeleteUserUseCase(repo)
-	
+
 	// 存在しないUserIDを使用
 	nonExistentID := entity.NewUserID()
 	input := DeleteUserInput{UserID: nonExistentID.Value()}
@@ -72,7 +72,7 @@ func TestDeleteUserUseCase_Execute_UserNotFound(t *testing.T) {
 
 func TestDeleteUserUseCase_Execute_InvalidUserID(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
+	repo := infrastructure.NewMemoryUserRepository()
 	useCase := NewDeleteUserUseCase(repo)
 
 	testCases := []struct {
@@ -101,7 +101,7 @@ func TestDeleteUserUseCase_Execute_InvalidUserID(t *testing.T) {
 
 func TestDeleteUserUseCase_Execute_MultipleUsersOneDeleted(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
+	repo := infrastructure.NewMemoryUserRepository()
 	userExistenceService := service.NewUserExistenceService(repo)
 	createUseCase := NewCreateUserUseCase(repo, userExistenceService)
 	deleteUseCase := NewDeleteUserUseCase(repo)
@@ -156,13 +156,13 @@ func TestDeleteUserUseCase_Execute_MultipleUsersOneDeleted(t *testing.T) {
 
 func TestDeleteUserUseCase_Execute_DeleteSameUserTwice(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
-	
+	repo := infrastructure.NewMemoryUserRepository()
+
 	fullName, _ := valueobject.NewFullName("太郎", "田中")
 	email, _ := valueobject.NewEmail("taro@example.com")
 	user := entity.NewUser(fullName, email)
 	repo.Save(user)
-	
+
 	useCase := NewDeleteUserUseCase(repo)
 	input := DeleteUserInput{UserID: user.ID().Value()}
 

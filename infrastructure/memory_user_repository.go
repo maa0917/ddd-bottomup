@@ -1,4 +1,4 @@
-package repository
+package infrastructure
 
 import (
 	"ddd-bottomup/domain/entity"
@@ -7,18 +7,18 @@ import (
 	"sync"
 )
 
-type UserRepositoryMemory struct {
+type MemoryUserRepository struct {
 	users map[string]*entity.User
 	mutex sync.RWMutex
 }
 
-func NewUserRepositoryMemory() repository.UserRepository {
-	return &UserRepositoryMemory{
+func NewMemoryUserRepository() repository.UserRepository {
+	return &MemoryUserRepository{
 		users: make(map[string]*entity.User),
 	}
 }
 
-func (r *UserRepositoryMemory) FindByID(id *entity.UserID) (*entity.User, error) {
+func (r *MemoryUserRepository) FindByID(id *entity.UserID) (*entity.User, error) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 	
@@ -29,7 +29,7 @@ func (r *UserRepositoryMemory) FindByID(id *entity.UserID) (*entity.User, error)
 	return user, nil
 }
 
-func (r *UserRepositoryMemory) FindByName(name *valueobject.FullName) (*entity.User, error) {
+func (r *MemoryUserRepository) FindByName(name *valueobject.FullName) (*entity.User, error) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 	
@@ -41,7 +41,7 @@ func (r *UserRepositoryMemory) FindByName(name *valueobject.FullName) (*entity.U
 	return nil, nil
 }
 
-func (r *UserRepositoryMemory) Save(user *entity.User) error {
+func (r *MemoryUserRepository) Save(user *entity.User) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	
@@ -49,7 +49,7 @@ func (r *UserRepositoryMemory) Save(user *entity.User) error {
 	return nil
 }
 
-func (r *UserRepositoryMemory) Delete(id *entity.UserID) error {
+func (r *MemoryUserRepository) Delete(id *entity.UserID) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	
@@ -58,14 +58,14 @@ func (r *UserRepositoryMemory) Delete(id *entity.UserID) error {
 }
 
 // テスト用ヘルパーメソッド
-func (r *UserRepositoryMemory) Clear() {
+func (r *MemoryUserRepository) Clear() {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	
 	r.users = make(map[string]*entity.User)
 }
 
-func (r *UserRepositoryMemory) Count() int {
+func (r *MemoryUserRepository) Count() int {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 	

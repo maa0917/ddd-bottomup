@@ -1,4 +1,4 @@
-package repository
+package infrastructure
 
 import (
 	"database/sql"
@@ -11,17 +11,17 @@ import (
 	_ "github.com/go-sql-driver/mysql" // MySQL driver
 )
 
-type CircleRepositoryImpl struct {
+type MySQLCircleRepository struct {
 	db *sql.DB
 }
 
-func NewCircleRepositoryImpl(db *sql.DB) repository.CircleRepository {
-	return &CircleRepositoryImpl{
+func NewMySQLCircleRepository(db *sql.DB) repository.CircleRepository {
+	return &MySQLCircleRepository{
 		db: db,
 	}
 }
 
-func (r *CircleRepositoryImpl) FindByID(id *entity.CircleID) (*entity.Circle, error) {
+func (r *MySQLCircleRepository) FindByID(id *entity.CircleID) (*entity.Circle, error) {
 	query := `
 		SELECT id, name, owner_id, created_at 
 		FROM circles 
@@ -54,7 +54,7 @@ func (r *CircleRepositoryImpl) FindByID(id *entity.CircleID) (*entity.Circle, er
 	return entity.ReconstructCircle(reconstructedID, circleName, reconstructedOwnerID, memberIDs, createdAt), nil
 }
 
-func (r *CircleRepositoryImpl) FindByName(name *valueobject.CircleName) (*entity.Circle, error) {
+func (r *MySQLCircleRepository) FindByName(name *valueobject.CircleName) (*entity.Circle, error) {
 	query := `
 		SELECT id, name, owner_id, created_at 
 		FROM circles 
@@ -87,7 +87,7 @@ func (r *CircleRepositoryImpl) FindByName(name *valueobject.CircleName) (*entity
 	return entity.ReconstructCircle(reconstructedID, reconstructedName, reconstructedOwnerID, memberIDs, createdAt), nil
 }
 
-func (r *CircleRepositoryImpl) FindAll() ([]*entity.Circle, error) {
+func (r *MySQLCircleRepository) FindAll() ([]*entity.Circle, error) {
 	query := `
 		SELECT id, name, owner_id, created_at 
 		FROM circles 
@@ -103,7 +103,7 @@ func (r *CircleRepositoryImpl) FindAll() ([]*entity.Circle, error) {
 	return r.scanCircles(rows)
 }
 
-func (r *CircleRepositoryImpl) Save(circle *entity.Circle) error {
+func (r *MySQLCircleRepository) Save(circle *entity.Circle) error {
 	// トランザクション開始
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -159,14 +159,14 @@ func (r *CircleRepositoryImpl) Save(circle *entity.Circle) error {
 }
 
 
-func (r *CircleRepositoryImpl) Delete(id *entity.CircleID) error {
+func (r *MySQLCircleRepository) Delete(id *entity.CircleID) error {
 	query := "DELETE FROM circles WHERE id = ?"
 	_, err := r.db.Exec(query, id.Value())
 	return err
 }
 
 // getMemberIDs はサークルのメンバーIDを取得します
-func (r *CircleRepositoryImpl) getMemberIDs(circleID *entity.CircleID) ([]*entity.UserID, error) {
+func (r *MySQLCircleRepository) getMemberIDs(circleID *entity.CircleID) ([]*entity.UserID, error) {
 	query := "SELECT user_id FROM circle_members WHERE circle_id = ?"
 	rows, err := r.db.Query(query, circleID.Value())
 	if err != nil {
@@ -189,7 +189,7 @@ func (r *CircleRepositoryImpl) getMemberIDs(circleID *entity.CircleID) ([]*entit
 }
 
 // scanCircles は複数のサークルをスキャンします
-func (r *CircleRepositoryImpl) scanCircles(rows *sql.Rows) ([]*entity.Circle, error) {
+func (r *MySQLCircleRepository) scanCircles(rows *sql.Rows) ([]*entity.Circle, error) {
 	var circles []*entity.Circle
 
 	for rows.Next() {

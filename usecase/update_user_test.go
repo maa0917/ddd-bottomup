@@ -4,14 +4,14 @@ import (
 	"ddd-bottomup/domain/entity"
 	"ddd-bottomup/domain/service"
 	"ddd-bottomup/domain/valueobject"
-	"ddd-bottomup/infrastructure/repository"
+	"ddd-bottomup/infrastructure"
 	"testing"
 )
 
 func TestUpdateUserUseCase_Execute_Success(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
-	
+	repo := infrastructure.NewMemoryUserRepository()
+
 	// 既存ユーザーを作成・保存
 	originalName, _ := valueobject.NewFullName("太郎", "田中")
 	user := entity.NewUser(originalName)
@@ -19,7 +19,7 @@ func TestUpdateUserUseCase_Execute_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to save test user: %v", err)
 	}
-	
+
 	useCase := NewUpdateUserUseCase(repo)
 	input := UpdateUserInput{
 		UserID:    user.ID().Value(),
@@ -56,7 +56,7 @@ func TestUpdateUserUseCase_Execute_Success(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to find updated user: %v", err)
 	}
-	
+
 	if updatedUser.Name().FirstName() != "次郎" {
 		t.Errorf("Expected updated FirstName '次郎', but got '%s'", updatedUser.Name().FirstName())
 	}
@@ -64,9 +64,9 @@ func TestUpdateUserUseCase_Execute_Success(t *testing.T) {
 
 func TestUpdateUserUseCase_Execute_UserNotFound(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
+	repo := infrastructure.NewMemoryUserRepository()
 	useCase := NewUpdateUserUseCase(repo)
-	
+
 	nonExistentID := entity.NewUserID()
 	input := UpdateUserInput{
 		UserID:    nonExistentID.Value(),
@@ -93,19 +93,19 @@ func TestUpdateUserUseCase_Execute_UserNotFound(t *testing.T) {
 
 func TestUpdateUserUseCase_Execute_DuplicateName(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
-	
+	repo := infrastructure.NewMemoryUserRepository()
+
 	// 2人のユーザーを作成
 	user1Name, _ := valueobject.NewFullName("太郎", "田中")
 	user1 := entity.NewUser(user1Name)
 	repo.Save(user1)
-	
+
 	user2Name, _ := valueobject.NewFullName("花子", "佐藤")
 	user2 := entity.NewUser(user2Name)
 	repo.Save(user2)
-	
+
 	useCase := NewUpdateUserUseCase(repo)
-	
+
 	// user2の名前をuser1と同じにしようとする
 	input := UpdateUserInput{
 		UserID:    user2.ID().Value(),
@@ -138,14 +138,14 @@ func TestUpdateUserUseCase_Execute_DuplicateName(t *testing.T) {
 
 func TestUpdateUserUseCase_Execute_SameNameUpdate(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
-	
+	repo := infrastructure.NewMemoryUserRepository()
+
 	originalName, _ := valueobject.NewFullName("太郎", "田中")
 	user := entity.NewUser(originalName)
 	repo.Save(user)
-	
+
 	useCase := NewUpdateUserUseCase(repo)
-	
+
 	// 同じ名前に更新（自分自身なのでOK）
 	input := UpdateUserInput{
 		UserID:    user.ID().Value(),
@@ -172,12 +172,12 @@ func TestUpdateUserUseCase_Execute_SameNameUpdate(t *testing.T) {
 
 func TestUpdateUserUseCase_Execute_InvalidName(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
-	
+	repo := infrastructure.NewMemoryUserRepository()
+
 	originalName, _ := valueobject.NewFullName("太郎", "田中")
 	user := entity.NewUser(originalName)
 	repo.Save(user)
-	
+
 	useCase := NewUpdateUserUseCase(repo)
 
 	testCases := []struct {

@@ -1,4 +1,4 @@
-package repository
+package infrastructure
 
 import (
 	"ddd-bottomup/domain/entity"
@@ -7,18 +7,18 @@ import (
 	"sync"
 )
 
-type CircleRepositoryMemory struct {
+type MemoryCircleRepository struct {
 	circles map[string]*entity.Circle
 	mu      sync.RWMutex
 }
 
-func NewCircleRepositoryMemory() repository.CircleRepository {
-	return &CircleRepositoryMemory{
+func NewMemoryCircleRepository() repository.CircleRepository {
+	return &MemoryCircleRepository{
 		circles: make(map[string]*entity.Circle),
 	}
 }
 
-func (r *CircleRepositoryMemory) FindByID(id *entity.CircleID) (*entity.Circle, error) {
+func (r *MemoryCircleRepository) FindByID(id *entity.CircleID) (*entity.Circle, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	
@@ -29,7 +29,7 @@ func (r *CircleRepositoryMemory) FindByID(id *entity.CircleID) (*entity.Circle, 
 	return circle, nil
 }
 
-func (r *CircleRepositoryMemory) FindByName(name *valueobject.CircleName) (*entity.Circle, error) {
+func (r *MemoryCircleRepository) FindByName(name *valueobject.CircleName) (*entity.Circle, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	
@@ -41,7 +41,7 @@ func (r *CircleRepositoryMemory) FindByName(name *valueobject.CircleName) (*enti
 	return nil, nil
 }
 
-func (r *CircleRepositoryMemory) Save(circle *entity.Circle) error {
+func (r *MemoryCircleRepository) Save(circle *entity.Circle) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	
@@ -49,7 +49,7 @@ func (r *CircleRepositoryMemory) Save(circle *entity.Circle) error {
 	return nil
 }
 
-func (r *CircleRepositoryMemory) Delete(id *entity.CircleID) error {
+func (r *MemoryCircleRepository) Delete(id *entity.CircleID) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	
@@ -57,7 +57,7 @@ func (r *CircleRepositoryMemory) Delete(id *entity.CircleID) error {
 	return nil
 }
 
-func (r *CircleRepositoryMemory) FindAll() ([]*entity.Circle, error) {
+func (r *MemoryCircleRepository) FindAll() ([]*entity.Circle, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	
@@ -68,8 +68,7 @@ func (r *CircleRepositoryMemory) FindAll() ([]*entity.Circle, error) {
 	return circles, nil
 }
 
-
-func (r *CircleRepositoryMemory) Count() int {
+func (r *MemoryCircleRepository) Count() int {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return len(r.circles)

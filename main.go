@@ -2,7 +2,7 @@ package main
 
 import (
 	"ddd-bottomup/domain/service"
-	"ddd-bottomup/infrastructure/repository"
+	"ddd-bottomup/infrastructure"
 	"ddd-bottomup/presentation/router"
 	"ddd-bottomup/usecase"
 	"log"
@@ -54,7 +54,7 @@ func setupApplication() (*Application, error) {
 
 	// 1. リポジトリ層の初期化
 	log.Println("Initializing repositories...")
-	userRepo := repository.NewUserRepositoryMemory()
+	userRepo := infrastructure.NewMemoryUserRepository()
 
 	// 2. ドメインサービス層の初期化
 	log.Println("Initializing domain services...")

@@ -4,14 +4,14 @@ import (
 	"ddd-bottomup/domain/entity"
 	"ddd-bottomup/domain/service"
 	"ddd-bottomup/domain/valueobject"
-	"ddd-bottomup/infrastructure/repository"
+	"ddd-bottomup/infrastructure"
 	"testing"
 )
 
 func TestGetUserUseCase_Execute_Success(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
-	
+	repo := infrastructure.NewMemoryUserRepository()
+
 	// テスト用のユーザーを作成・保存
 	fullName, _ := valueobject.NewFullName("太郎", "田中")
 	user := entity.NewUser(fullName)
@@ -19,7 +19,7 @@ func TestGetUserUseCase_Execute_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to save test user: %v", err)
 	}
-	
+
 	useCase := NewGetUserUseCase(repo)
 	input := GetUserInput{UserID: user.ID().Value()}
 
@@ -50,9 +50,9 @@ func TestGetUserUseCase_Execute_Success(t *testing.T) {
 
 func TestGetUserUseCase_Execute_UserNotFound(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
+	repo := infrastructure.NewMemoryUserRepository()
 	useCase := NewGetUserUseCase(repo)
-	
+
 	// 存在しないUserIDを使用
 	nonExistentID := entity.NewUserID()
 	input := GetUserInput{UserID: nonExistentID.Value()}
@@ -76,7 +76,7 @@ func TestGetUserUseCase_Execute_UserNotFound(t *testing.T) {
 
 func TestGetUserUseCase_Execute_InvalidUserID(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
+	repo := infrastructure.NewMemoryUserRepository()
 	useCase := NewGetUserUseCase(repo)
 
 	testCases := []struct {
@@ -109,7 +109,7 @@ func TestGetUserUseCase_Execute_InvalidUserID(t *testing.T) {
 
 func TestGetUserUseCase_Execute_MultipleUsers(t *testing.T) {
 	// Arrange
-	repo := repository.NewUserRepositoryMemory()
+	repo := infrastructure.NewMemoryUserRepository()
 	userExistenceService := service.NewUserExistenceService(repo)
 	createUseCase := NewCreateUserUseCase(repo, userExistenceService)
 	getUserUseCase := NewGetUserUseCase(repo)
