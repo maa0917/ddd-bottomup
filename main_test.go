@@ -52,9 +52,7 @@ func TestTestApplication_UserLifecycle(t *testing.T) {
 		updateFirstName   string
 		updateLastName    string
 		updateEmail       string
-		duplicateInput    usecase.CreateUserInput
 		expectCreateError bool
-		expectDuplicateErr bool
 	}{
 		{
 			name: "ユーザーの作成・取得・更新・削除が正常に行えること",
@@ -64,17 +62,10 @@ func TestTestApplication_UserLifecycle(t *testing.T) {
 				Email:     "taro@example.com",
 				IsPremium: false,
 			},
-			updateFirstName: "次郎",
-			updateLastName:  "佐藤",
-			updateEmail:     "jiro@example.com",
-			duplicateInput: usecase.CreateUserInput{
-				FirstName: "次郎",
-				LastName:  "佐藤",
-				Email:     "another@example.com",
-				IsPremium: false,
-			},
-			expectCreateError:  false,
-			expectDuplicateErr: true,
+			updateFirstName:   "次郎",
+			updateLastName:    "佐藤",
+			updateEmail:       "jiro@example.com",
+			expectCreateError: false,
 		},
 		{
 			name: "プレミアムユーザーのライフサイクルが正常に動作すること",
@@ -84,17 +75,10 @@ func TestTestApplication_UserLifecycle(t *testing.T) {
 				Email:     "hanako@example.com",
 				IsPremium: true,
 			},
-			updateFirstName: "美咲",
-			updateLastName:  "山田",
-			updateEmail:     "misaki@example.com",
-			duplicateInput: usecase.CreateUserInput{
-				FirstName: "美咲",
-				LastName:  "山田",
-				Email:     "another2@example.com",
-				IsPremium: false,
-			},
-			expectCreateError:  false,
-			expectDuplicateErr: true,
+			updateFirstName:   "美咲",
+			updateLastName:    "山田",
+			updateEmail:       "misaki@example.com",
+			expectCreateError: false,
 		},
 	}
 
@@ -178,16 +162,17 @@ func TestTestApplication_UserLifecycle(t *testing.T) {
 					tt.updateEmail, updateOutput.Email)
 			}
 
-			// Test 4: 重複チェック
-			_, err = app.CreateUserUseCase.Execute(tt.duplicateInput)
-			if tt.expectDuplicateErr {
-				if err == nil {
-					t.Error("重複ユーザー作成でエラーが期待されましたが、エラーが発生しませんでした")
-				}
-			} else {
-				if err != nil {
-					t.Errorf("重複ユーザー作成で予期しないエラーが発生しました: %v", err)
-				}
+			// Test 4: 重複名チェック（更新後の名前と同じ名前で新規作成試行）
+			duplicateInput := usecase.CreateUserInput{
+				FirstName: tt.updateFirstName,
+				LastName:  tt.updateLastName,
+				Email:     "duplicate@example.com",
+				IsPremium: false,
+			}
+
+			_, err = app.CreateUserUseCase.Execute(duplicateInput)
+			if err == nil {
+				t.Error("重複ユーザー作成でエラーが期待されましたが、エラーが発生しませんでした")
 			}
 
 			// Test 5: ユーザー削除
